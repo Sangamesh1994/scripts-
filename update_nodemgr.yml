@@ -1,0 +1,11 @@
+---
+- name: Update Node Manager Setting
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /opt/puppetlabs/bin/python
+  tasks:
+    - name: Copy files
+      shell: "sed -i 's/cebsl1-atl.test.cloud/cebs.dev/g' nodemanager.properties"
+      args:
+        chdir: "/opt/fedex/cebs/domains/cebs_app/nodemanager/"

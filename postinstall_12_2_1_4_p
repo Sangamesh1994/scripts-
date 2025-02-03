@@ -1,0 +1,97 @@
+#!/bin/bash
+#ScriptDir:
+#/ast/archive/ceBundles/WebLogic_Server/12.2.1.4.0/scripts
+#ScriptName: post-install.sh
+###################################################
+# HpSa
+# Post-Install Script  For Weblogic 12.2.1.4.0 OCT2019
+#
+###################################################
+# ROOT_DIR       - should always be /opt/weblogic
+# MW_HOME        - Middleware Home directory
+# MYDATE         - MonthYear used in file names
+#############################################################
+
+# Set up environment
+# change hostname in $MW_HOME/registry.xml
+PATH=/opt/java/hotspot/7/latest/jre/bin:/opt/java/hotspot/7/latest/bin/:/opt/java/hotspot/8/latest/jre/bin:/opt/java/hotspot/8/latest/bin/:$PATH
+# show what version of java I am going to use
+java -version
+user=`id | cut -d"(" -f2 | cut -d")" -f1`
+echo "User is now - \"$user\" "
+
+# The RLEASE is passed in as a parameter and is used to determine the MW_HOME path
+RELEASE=$1
+
+ROOT_DIR="/opt/weblogic"
+MW_HOME="${ROOT_DIR}/wl12214_${RELEASE}"
+WLS_VERSION="`basename $MW_HOME`"
+WL_HOME="${MW_HOME}/wlserver"
+DOMAIN_INFO_DIR="${ROOT_DIR}/AstDomainInfo"
+DOMAIN_INFO_BACKUP="${DOMAIN_INFO_DIR}/${WLS_VERSION}/domain-registry.xml_Backup"
+MYDATE="OCT2019"
+
+# Set up the environment by sourcing in setWLSEnv.sh
+if [ ! -e ${WL_HOME}/server/bin/setWLSEnv.sh ] ; then
+        echo -e "\nEnvironment cannot be set up since"
+        echo -e "${WL_HOME}/server/bin/setWLSEnv.sh does not exist."
+        echo -e "exiting!"
+        exit 1
+else
+        . ${WL_HOME}/server/bin/setWLSEnv.sh
+fi
+
+cd $MW_HOME
+
+### Now on with the install
+HOST="$(hostname)"
+INSTALL_DATE="$(date)"
+
+### Amost done so lets now update the hostname in the registry and we are done
+
+PATH=/opt/java/hotspot/7/latest/jre/bin:/opt/java/hotspot/7/latest/bin/:/opt/java/hotspot/8/latest/jre/bin:/opt/java/hotspot/8/latest/bin/:$PATH
+java utils.CertGen -certfile democert -keyfile demokey -keyfilepass DemoIdentityPassPhrase -strength 1024 -ou "FOR TESTING ONLY" -o MyOrganization -l MyTown -s MyState -c US
+
+java utils.ImportPrivateKey -keystore DemoIdentity.jks -storepass DemoIdentityKeyStorePassPhrase -storetype jks -keypass DemoIdentityPassPhrase -alias DemoIdentity -certfile democert.pem -keyfile demokey.pem -keyfilepass DemoIdentityPassPhrase
+
+### move the new certs to the correct location
+echo " "
+echo "Moving newly created DEMO SSL artifacts to their correct location."
+echo "-----"
+
+#We are in the $MW_HOME directory (last cd)
+
+/bin/chmod 755 demo*
+/bin/chmod 755 Demo*
+/bin/chown weblogic:weblogic demo*
+/bin/chown weblogic:weblogic Demo*
+
+#Change the permissions and ownership of the /opt/weblogic directory
+/bin/chmod 755 /opt/weblogic
+/bin/chown weblogic:weblogic /opt/weblogic
+
+#Change the permissions eveything in the  ${WL_HOME}/server/lib/ directory
+/bin/chmod -R 755 ${WL_HOME}/server/lib
+
+mv demo* Demo* ${WL_HOME}/server/lib/
+# tell puppet that those are our certs and not default ones
+touch ${WL_HOME}/server/lib/.democert.puppet
+
+# Retrieve the previous domain-registry.xml info from backup if available.
+# The backup is created in the pre-Uninstall script/process
+#  We are in the $MW_HOME directory (last cd)
+
+if [[ -a $DOMAIN_INFO_BACKUP ]] ; then
+cp $DOMAIN_INFO_BACKUP ${MW_HOME}/domain-registry.xml
+fi
+
+touch ${MW_HOME}/domain-registry.xml
+
+# Set proper file ownership and permissions
+# The Main Mass Permissions are pre-set prior to creating rpm file
+
+/bin/chmod 777 ${MW_HOME}/logs
+/bin/chmod 777 ${MW_HOME}/domain-registry.xml
+/bin/chown weblogic:weblogic ${MW_HOME}/domain-registry.xml
+
+exit 0

@@ -1,0 +1,12 @@
+---
+- name: Start weblogic Admin
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /opt/puppetlabs/bin/python
+  tasks:
+      # tasks file for adminserver---
+    - name: Start WebLogic processes
+      command: sh /opt/fedex/cebs/domains/cebs_app/startWebLogic.sh
+      async: 2
+

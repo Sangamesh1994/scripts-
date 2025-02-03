@@ -1,0 +1,9 @@
+---
+- name: Create and start AdminServer domain
+  hosts: all
+  gather_facts: no
+  roles:
+     - role: cleanDomainTemp
+       vars:
+         domain_name: cebs_app
+

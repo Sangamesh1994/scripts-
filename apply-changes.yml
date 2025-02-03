@@ -1,0 +1,16 @@
+---
+- name: update JDBC driver
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /opt/puppetlabs/bin/python
+  tasks:
+    - name: backup file
+      command: cp /opt/fedex/cebs/domains/cebs_app/bin/setDomainEnv.sh /opt/home/cebs/
+    - name: update setDomainEnv.sh
+      lineinfile:
+        path: "/opt/fedex/cebs/domains/cebs_app/bin/setDomainEnv.sh"
+        line: '-Doracle.jdbc.fanEnabled=false'
+        insertafter: -Djava.awt.*
+
+

@@ -1,0 +1,9 @@
+- name: Update Java Trust Store
+  hosts: all
+  gather_facts: no
+  roles:
+     - role: updateTrustStore
+       vars:
+         domain_name: cebs_domain
+         jdk_version: jdk1.8.0_361
+

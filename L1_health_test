@@ -1,0 +1,36 @@
+#!/opt/puppetlabs/bin/python
+import sys
+import requests
+import json
+import datetime;
+#from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from subprocess import Popen, PIPE
+
+
+node_list = ["u1022083", "u1022084","u1021933","u1021964","u1021816","u1021932" ]
+
+def send_email(host):
+    #msg = MIMEMultipart('alternative')
+    html = """<html><head></head><body><p style="font-size:25px;color:red;">"""+host+" is not healthy </p></body></html>"
+    msg = MIMEText(html, "html")
+    msg["From"] = "4789652@corp.ds.fedex.com"
+    msg["To"] = "4789652@corp.ds.fedex.com"
+    msg["Subject"] = "Server Health ALERT"
+    p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+    p.communicate(msg.as_bytes() if sys.version_info >= (3,0) else msg.as_string())
+
+for node in node_list:
+    try:
+        PegaURL = "http://"+node+".test.cloud.fedex.com:11235/prwebl1/PRRestService/monitor/pingService/ping"
+        r = requests.get(PegaURL)
+        data = r.json()
+        if data['state'] == "healthy":
+            print("{0} : \033[92m{1} \033[00m".format(data['node_id'],data['state']))
+        else:
+            print("{0} : \033[91m{1} \033[00m".format(data['node_id'],data['state']))
+            send_email(data['node_id'])
+    except Exception as err:
+        print("\033[91m {0} is unreachable \033[0m".format(node))
+        pass
+

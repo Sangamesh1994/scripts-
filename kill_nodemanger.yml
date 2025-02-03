@@ -1,0 +1,19 @@
+---
+- name: Kill weblogic
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /opt/puppetlabs/bin/python
+  tasks:
+      # tasks file for adminserver---
+    - name: Get NodeManager processes
+      ignore_errors: yes
+      shell: "ps -few | grep weblogic.NodeManager  | awk '{print $2}'"
+      register: running_processes
+
+    - name: Kill NodeManager process
+      ignore_errors: yes
+      shell: "kill -9 {{ item }}"
+      with_items: "{{ running_processes.stdout_lines }}"
+
+

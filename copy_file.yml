@@ -1,0 +1,11 @@
+---
+- name: A playbook for create directory
+  hosts: all
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /opt/puppetlabs/bin/python
+  tasks:
+    - name: copy ojdbc8.jar 
+      copy: 
+        src: "{{ playbook_dir }}/ojdbc8.jar"
+        dest: "/opt/fedex/cebs/current"

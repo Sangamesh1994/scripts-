@@ -1,0 +1,42 @@
+#!/bin/bash
+green='\e[0;32m'
+red='\e[41m'
+endColor='\e[0m'
+function help_func() {
+	echo -e "$green    USAGE: "
+  	echo -e "    ./wls-start -[option] {arguments}"
+  	echo -e "                [options] {arguments} "
+  	echo -e "                   -env   L1/L3/LAS_L4/ATL_L4/L6/LAS_AZ1_PROD/LAS_AZ2_PROD/ATL_AZ1_PROD/ATL_AZ2_PROD"
+  	echo -e "                   -s     [server-name-1,server-name-2,..] or "
+	echo -e "                   -s     ATL_L4/LAS_L4/ATL_L4_WEB/ATL_L4_API/LAS_L4_WEB/LAS_L4_API or "
+	echo -e "                   -s     ATL_AZ1_PROD/ATL_AZ1_PROD_WEB/ATL_AZ1_PROD_API/ATL_AZ2_PROD/ATL_AZ2_PROD_WEB/ATL_AZ2_PROD_API or "
+	echo -e "                   -s     LAS_AZ1_PROD/LAS_AZ1_PROD_WEB/LAS_AZ1_PROD_API/LAS_AZ2_PROD/LAS_AZ2_PROD_WEB/LAS_AZ2_PROD_API$endColor"
+  	exit
+}
+if  [ "$#" -ne 4 ] || [ "$1" != "-env" ] || [ "$3" != "-s" ]; then
+	echo -e "$red Mandatory parameters missing... $endColor"
+	help_func
+fi
+
+ADMIN=`.lib/check_env.py ${2}`
+if [ "$ADMIN" = "NOT_OK" ]; then
+       echo -e "$red Invalid environment.. $endColor"
+       help_func
+fi
+server_check=`.lib/check_server_list.py ${2} "${4}"` 
+group_check=`.lib/check_group.py ${2} "${4}"`
+if [ "$server_check" = "NOT_OK" ] && [ "$group_check" = "NOT_OK" ]; then
+	echo -e "$red Invalid server name/details $endColor"
+        help_func
+fi
+
+SER=${4}
+if [ "$group_check" = "OK" ]; then
+    echo "Get Server list"
+    SER=`.lib/get_server_list.py $4 start`
+fi
+
+echo "Starting ${SER}"
+ansible-playbook -i "${ADMIN}", .ymls/start_weblogic.yml -e "{'servers':${SER}}"
+
+
