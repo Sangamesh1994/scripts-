@@ -5,5 +5,5 @@
   roles:
      - role: cleanDomainTemp
        vars:
-         domain_name: cebs_app
+         domain_name: cebs_domain
 
